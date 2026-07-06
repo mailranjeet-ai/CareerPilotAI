@@ -1,46 +1,35 @@
-from ollama import chat
+from utils.file_loader import load_prompt
+from models.conversation import Conversation
+from services.ollama_service import OllamaService
+from agents.career_agent import CareerAgent
 
-def load_system_prompt():
-    with open(
-        "src/prompts/career_assistant.txt",
-        "r",
-        encoding="utf-8"
-    ) as file:
-        return file.read()
+agent = CareerAgent()
 
 print("=== Welcome to CareerPilot AI ===")
 print("Type 'exit' to quit.\n")
 
-conversation = [
-    {
-        "role": "system",
-        "content": load_system_prompt()
-    }
-]
+conversation = Conversation(
+    load_prompt("career_assistant.txt")
+)
 
 while True:
+
     question = input("You: ")
-    conversation.append(
-    {
-        "role": "user",
-        "content": question
-    }
-    )
+
     if question.lower() == "exit":
         print("Goodbye!")
         break
 
-    response = chat(
-        model="qwen3:8b",
-        messages=conversation
-    )
+    conversation.add_user_message(question)
+
+    answer = agent.process(
+    question,
+    conversation
+)
 
     print("\nQwen:")
-    print(response.message.content)
-    conversation.append(
-    {
-        "role": "assistant",
-        "content": response.message.content
-    }
-    )
+    print(answer)
+
+    conversation.add_assistant_message(answer)
+
     print()
